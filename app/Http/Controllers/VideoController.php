@@ -25,11 +25,22 @@ class VideoController extends Controller
 
             $data = $response->json()['data'];
 
+            if (!empty($query)) {
+                $res = array_filter($data, function ($video) use ($query, $pageSize) {
+                    $matchVideoTags = preg_grep("/$query/ui", $video['video_tags']);
+                    $matchPerformersFemale = preg_grep("/$query/ui", $video['performers_names']['female']);
+
+                    return $matchVideoTags || $matchPerformersFemale;
+                });
+
+                $data = $res;
+            }
+
             $videos = array_slice($data, $startIndex, $pageSize);
 
             $xmlData = [
                 'total_videos' => count($data),
-                'videos' => $videos,
+                'videos' => $videos ?? [],
                 'current_page' => $page,
                 'last_page' => ceil(count($data) / $pageSize),
                 'per_page' => $pageSize
