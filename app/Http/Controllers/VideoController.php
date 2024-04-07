@@ -72,12 +72,26 @@ class VideoController extends Controller
     public function show($id)
     {
         $url = env('VRP_URL', '');
-        $response = Http::get($url . $id);
+
+        $response = Http::withoutVerifying()->get($url);
 
         if ($response->successful()) {
-            return $response->json();
+
+            $data = $response->json()['data'];
+
+            $res = array_filter($data, function ($video) use ($id) {
+                return $id == $video['id'];
+            });
+
+            if (count($res) == 0) {
+                return response()->json(['error' => 'The video is not found'], 404);
+            }
+
+            $xml = array2xml($res, "video", false);
+
+            return response($xml)->header('Content-Type', 'application/xml');
         }
-        return response()->json(['error' => 'Video could not be found'], 404);
+        return response()->json(['error' => 'The video could not be obtained'], 500);
     }
 }
 
