@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use SimpleXMLElement;
@@ -11,7 +12,7 @@ class VideoController extends Controller
     public function index(Request $request)
     {
         $page = $request->query('page', 1);
-        $query = $request->query('query', ''); // TODO: Waiting for interviewer 
+        $query = $request->query('query', '');
 
         $pageSize = 20;
 
@@ -35,6 +36,19 @@ class VideoController extends Controller
 
                 $data = $res;
             }
+
+            usort($data, function ($a, $b) {
+                $dateA = new DateTime($a['release_date']);
+                $dateB = new DateTime($b['release_date']);
+
+                if ($dateA < $dateB) {
+                    return 1;
+                } elseif ($dateA > $dateB) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            });
 
             $videos = array_slice($data, $startIndex, $pageSize);
 
